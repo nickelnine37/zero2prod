@@ -1,4 +1,5 @@
 use actix_web::{web, App, HttpRequest, HttpServer, Responder, HttpResponse};
+use actix_web::dev::Server;
 use std::collections::HashMap;
 
 async fn greet_check(req: HttpRequest) -> impl Responder {
@@ -6,7 +7,7 @@ async fn greet_check(req: HttpRequest) -> impl Responder {
     format!("Hello {}", &name)
 }
 
-async fn json_check(req: HttpRequest) -> impl Responder {
+async fn json_check() -> impl Responder {
     HttpResponse::Ok().json(HashMap::from([
         ("Mercury", 0.4),
         ("Venus", 0.7),
@@ -20,12 +21,19 @@ async fn health_check() -> impl Responder {
     HttpResponse::Ok()
 }
 
-pub async fn run() -> std::io::Result<()> {
-    HttpServer::new(|| {
+pub fn run() -> Result<Server, std::io::Error> {
+
+    // server.bind().run() returns a Server, which is kind of like a future in
+    // that we can call .await on it
+
+    let server = HttpServer::new(|| {
         App::new()
             .route("/health_check", web::get().to(health_check))
             .route("/json", web::get().to(json_check))
             .route("/{name}", web::get().to(greet_check))
     }).bind("127.0.0.1:8000")?
-        .run().await
+        .run();
+
+    // return OK(server)
+    Ok(server)
 }
