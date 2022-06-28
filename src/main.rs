@@ -1,6 +1,6 @@
 
-#[tokio::main]
-async fn main() -> std::io::Result<()> {
+// #[tokio::main]
+fn main() {
         // call .await on the server that we just created
-        zero2prod::run()?.await
+        // zero2prod::run()?.await
 }

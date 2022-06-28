@@ -1,6 +1,7 @@
 use actix_web::{web, App, HttpRequest, HttpServer, Responder, HttpResponse};
 use actix_web::dev::Server;
 use std::collections::HashMap;
+use std::net::TcpListener;
 
 async fn greet_check(req: HttpRequest) -> impl Responder {
     let name = req.match_info().get("name").unwrap_or("World");
@@ -21,7 +22,7 @@ async fn health_check() -> impl Responder {
     HttpResponse::Ok()
 }
 
-pub fn run() -> Result<Server, std::io::Error> {
+pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
 
     // server.bind().run() returns a Server, which is kind of like a future in
     // that we can call .await on it
@@ -31,7 +32,8 @@ pub fn run() -> Result<Server, std::io::Error> {
             .route("/health_check", web::get().to(health_check))
             .route("/json", web::get().to(json_check))
             .route("/{name}", web::get().to(greet_check))
-    }).bind("127.0.0.1:8000")?
+    })
+        .listen(listener)?
         .run();
 
     // return OK(server)
