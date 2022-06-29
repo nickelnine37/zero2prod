@@ -22,11 +22,20 @@ async fn health_check() -> impl Responder {
     HttpResponse::Ok()
 }
 
-pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
+pub struct LaunchResult {
+    pub server: Server,
+    pub port: u16,
+}
 
-    // server.bind().run() returns a Server, which is kind of like a future in
-    // that we can call .await on it
+pub fn run() -> Result<LaunchResult, std::io::Error> {
 
+    // binding to port 0 automatically finds an available port
+    let listener = TcpListener::bind("127.0.0.1:0").expect("Failed to bind to port");
+
+    // we need to know what that port is so we can send the appropriate request in our tests
+    let port = listener.local_addr().unwrap().port();
+
+    // Server implements Future
     let server = HttpServer::new(|| {
         App::new()
             .route("/health_check", web::get().to(health_check))
@@ -36,6 +45,6 @@ pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
         .listen(listener)?
         .run();
 
-    // return OK(server)
-    Ok(server)
+    // return OK(LaunchResult)
+    Ok(LaunchResult{server, port})
 }
